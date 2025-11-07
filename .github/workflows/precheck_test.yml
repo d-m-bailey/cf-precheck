@@ -24,16 +24,16 @@ jobs:
       fail-fast: false
 
     steps:
-    - name: Checkout efabless/mpw_precheck
+    - name: Checkout chipfoundry/mpw_precheck
       uses: actions/checkout@v4
       with:
-        repository: efabless/mpw_precheck
+        repository: chipfoundry/mpw_precheck
         path: mpw_precheck
 
     - name: Checkout ${{ matrix.repo }}
       uses: actions/checkout@v4
       with:
-        repository: efabless/${{ matrix.repo }}
+        repository: chipfoundry/${{ matrix.repo }}
         path: ${{ matrix.repo }}
 
     - name: Set up Docker Buildx
