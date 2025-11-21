@@ -32,8 +32,10 @@
 #     * Change the default of sram_exclude to false
 #   2025-10-29 : 2025.10.29_01.10 release
 #     * Updated to be in line with the current Skywater required rules
+#   2025-11-21 : licon bar spacing for SP.15/16
+#     * Updated to 0.57 & 0.64 per feedback from SWT
 ##########################################################################################
-release = "2025.10.29_01.10"
+release = "2025.11.17_01.10"
 
 require "time"
 require "logger"
@@ -893,16 +895,20 @@ if FEOL
     # The space() method returns violations (edges/regions) where spacing < 0.64
     # We expand these violation regions slightly to capture the bar licons involved
     licon_bars_close_spacing_violations = licon_bars.space(0.64, euclidian)
+
     # Expand violations slightly to capture nearby bar licons
     licon_bars_close_regions = licon_bars_close_spacing_violations.polygons.sized(0.1)
+
     # Get bar licons that interact with close spacing regions
     licon_bars_in_close_spacing = licon_bars.interacting(licon_bars_close_regions)
+
     # These remain 0.19 um wide after mask generation (sides not sized, ends are sized)
     # Note: For spacing checks, we use as-is since spacing is width-based
     licon_bars_0p19_post_mg = licon_bars_in_close_spacing
     
     # Bar licons NOT in close spacing get sized to 0.25 um on all sides
     licon_bars_not_close = licon_bars.not(licon_bars_in_close_spacing)
+    
     # Simulate post-maskgen: size by 0.03 on all sides (0.19 × 2.0 -> 0.25 × 2.06 um)
     licon_bars_0p25_post_mg = licon_bars_not_close.sized(0.03)
     
