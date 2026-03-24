@@ -185,10 +185,6 @@ def run_be_check(
     log_path = f"{output_directory}/logs"
     report_path = f"{output_directory}/outputs/reports"
     log_file_path = f"{log_path}/{check}_check.log"
-    tmp_dir = f"{output_directory}/tmp"
-
-    for d in [log_path, tmp_dir, f"{output_directory}/outputs", report_path]:
-        os.makedirs(d, exist_ok=True)
 
     if check == "LVS":
         be_script = "run_be_checks"
@@ -201,6 +197,9 @@ def run_be_check(
     else:
         logging.error(f"Unknown backend check: {check}")
         return False
+
+    for d in [log_path, tmp_dir, f"{output_directory}/outputs", report_path]:
+        os.makedirs(d, exist_ok=True)
 
     be_checks_dir = str(Path(__file__).parent / "be_checks")
 
