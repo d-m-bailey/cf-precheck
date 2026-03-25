@@ -32,6 +32,7 @@ SKIP_OEB=no
 while [[ "$1" == "--"* ]]; do
 	if [[ "$1" == "--noextract" ]]; then
 		export EXTRACT_LAYOUT=no
+		extract_option="--noextract"
 		shift
 	elif [[ "$1" == "--nooeb" ]]; then
 		SKIP_OEB=yes
@@ -106,15 +107,17 @@ start_time=$SECONDS
 $LVS_ROOT/run_hier_check $TOP_SOURCE "$(echo $LVS_VERILOG_FILES | sed 's/#[^ ]*//g')" $TOP_LAYOUT $LAYOUT_FILE "${PDK%?}_([^/_]*_)*_"
 hier_status=$?
 
-if [[ $EXTRACT_LAYOUT == yes ]]; then
-	$LVS_ROOT/run_scheck
+# Default is to not run softcheck - only run softcheck if RUN_SOFTCHECK is set to 1.
+# If softcheck is run, subsequent extractions are not needed.
+if [[ "$RUN_SOFTCHECK" == 1 ]]; then
+	$LVS_ROOT/run_scheck $extract_option
 	scheck_status=$?
+	extract_option="--noextract"
 else
-	$LVS_ROOT/run_scheck --noextract
-	scheck_status=$?
+	scheck_status=""
 fi
 
-$LVS_ROOT/run_full_lvs --noextract
+$LVS_ROOT/run_full_lvs $extract_option
 lvs_status=$?
 
 if [[ -f $LVS_ROOT/tech/$PDK/cvc.power.$TOP_SOURCE || -f ${CONFIG_FILE%/*}/cvc.power.$TOP_SOURCE ]]; then
