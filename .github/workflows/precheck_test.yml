@@ -66,13 +66,13 @@ jobs:
       uses: actions/cache@v4
       with:
         path: ${{ github.workspace }}/pdk
-        key: ${{ runner.os }}-pdk-${{ hashFiles('**/volare.toml') }}
+        key: ${{ runner.os }}-pdk-${{ hashFiles('**/ciel.toml') }}
 
-    - name: Install Volare and PDK
+    - name: Install ciel and PDK
       if: steps.cache-pdk.outputs.cache-hit != 'true'
       run: |
-        python3 -m pip install --upgrade --no-cache-dir volare
-        volare enable 6d4d11780c40b20ee63cc98e645307a9bf2b2ab8 --pdk-root ${{ github.workspace }}/pdk
+        python3 -m pip install --upgrade --no-cache-dir ciel
+        ciel enable 3e0e31dcce8519a7dbb82590346db16d91b7244f --pdk-root ${{ github.workspace }}/pdk
       env:
         PDK_ROOT: ${{ github.workspace }}/pdk
 
