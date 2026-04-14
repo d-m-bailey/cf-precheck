@@ -91,6 +91,7 @@ jobs:
         docker run \
           -v "$INPUT_DIR":"$INPUT_DIR" \
           -v "$PDK_ROOT":"$PDK_ROOT" \
+          -e "PDK_ROOT":"$PDK_ROOT" \
           mpw_precheck:latest \
           cf-precheck \
             -i "$INPUT_DIR" \
