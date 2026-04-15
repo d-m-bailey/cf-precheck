@@ -56,6 +56,18 @@ jobs:
           mpw_precheck/dependencies
       timeout-minutes: 30
 
+    - name: Build Docker image with current repo Python code
+      run: |
+        docker build \
+          --tag mpw_precheck:test \
+          -f - . <<'EOF'
+        FROM mpw_precheck:latest
+        WORKDIR /work
+        COPY . /work
+        RUN python3 -m pip install --no-cache-dir -U pip
+        RUN python3 -m pip install --no-deps .
+        EOF
+
     - name: Move cache
       run: |
         rm -rf /tmp/.buildx-cache
@@ -93,7 +105,7 @@ jobs:
           -v "$INPUT_DIR":"$INPUT_DIR" \
           -v "$PDK_ROOT":"$PDK_ROOT" \
           -e PDK_ROOT="$PDK_ROOT" \
-          mpw_precheck:latest \
+          mpw_precheck:test \
           cf-precheck \
             -i "$INPUT_DIR" \
             -p "$PDK_PATH" \
