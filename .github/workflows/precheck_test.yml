@@ -92,7 +92,7 @@ jobs:
         docker run --rm \
           -v "$INPUT_DIR":"$INPUT_DIR" \
           -v "$PDK_ROOT":"$PDK_ROOT" \
-          -v "$GITHUB_WORKSPACE":/work/cf-precheck \
+          -v ${{ github.workspace }}:/work/cf-precheck \
           -e PDK_ROOT="$PDK_ROOT" \
           -e PDK_PATH="$PDK_PATH" \
           -e PDKPATH="$PDK_PATH" \
