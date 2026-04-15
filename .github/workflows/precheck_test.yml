@@ -77,6 +77,13 @@ jobs:
       env:
         PDK_ROOT: ${{ github.workspace }}/pdk
 
+    - name: Debug workspace layout
+      run: |
+        echo "GITHUB_WORKSPACE=$GITHUB_WORKSPACE"
+        pwd
+        ls -la "$GITHUB_WORKSPACE"
+        find "$GITHUB_WORKSPACE" -maxdepth 3 \( -name cf_precheck -o -name pyproject.toml \)
+
     - name: Run Precheck
       run: |
         INPUT_DIR=${{ github.workspace }}/${{ matrix.repo }}
