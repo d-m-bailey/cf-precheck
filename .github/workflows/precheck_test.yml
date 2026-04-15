@@ -53,23 +53,8 @@ jobs:
           --cache-to=type=local,dest=/tmp/.buildx-cache-new,mode=max \
           --output type=docker \
           --tag mpw_precheck:latest \
-          -f mpw_precheck/dependencies/Dockerfile \
-          .
+          mpw_precheck/dependencies
       timeout-minutes: 30
-
-    - name: Build Docker image with current repo Python code
-      run: |
-        docker build \
-          --tag cf_precheck:latest \
-          -f - . <<'EOF'
-        FROM mpw_precheck:latest
-        WORKDIR /work
-        COPY . /work
-        RUN pwd && ls -la /work && find / -name pyproject.toml -o -name setup.py
-        RUN cat /work/mpw_precheck/src/cf_precheck/__init__.py
-        RUN python3 -m pip install --no-cache-dir -U pip
-        RUN python3 -m pip install --no-deps /work
-        EOF
 
     - name: Move cache
       run: |
@@ -104,17 +89,24 @@ jobs:
           SKIP_ARGS="--skip-checks ${{ matrix.skip_checks }}"
         fi
 
-        docker run \
+        docker run --rm \
           -v "$INPUT_DIR":"$INPUT_DIR" \
           -v "$PDK_ROOT":"$PDK_ROOT" \
+          -v "$GITHUB_WORKSPACE":/work/cf-precheck \
           -e PDK_ROOT="$PDK_ROOT" \
-          cf_precheck:latest \
-          cf-precheck \
-            -i "$INPUT_DIR" \
-            -p "$PDK_PATH" \
-            -c /opt/caravel \
-            -o "$OUTPUT_DIR" \
-            $SKIP_ARGS
+          -e PDK_PATH="$PDK_PATH" \
+          -e PDKPATH="$PDK_PATH" \
+          -e PYTHONPATH=/work/cf-precheck/src \
+          mpw_precheck:latest \
+          bash -lc "
+            python3 -c \"import cf_precheck; print(cf_precheck.__file__)\"
+            python3 -m cf_precheck \
+              -i \"$INPUT_DIR\" \
+              -p \"$PDK_PATH\" \
+              -c /opt/caravel \
+              -o \"$OUTPUT_DIR\" \
+              $SKIP_ARGS
+          "
 
     - name: Upload Precheck results
       uses: actions/upload-artifact@v4
