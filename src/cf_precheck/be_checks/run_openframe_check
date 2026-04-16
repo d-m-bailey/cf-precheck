@@ -273,15 +273,15 @@ awk '
 		if ( net ~ /gpio_loopback_one/ ) return "vccd1";
 		return net;
 	}
-	function PrintBit(bit, connections) {
+	function GetBit(bit, connections) {
 		if ( bit ~ /gpio_loopback_zero/ || bit ~ /vssd*/ ) {
-			printf "0";
+			return "0";
 		} else if ( bit ~ /gpio_loopback_one/ || bit ~ /vccd*/ ) {
-			printf "1";
+			return "1";
 		} else if ( connections == 0 ) {
-			printf "x";
+			return "x";
 		} else {
-			printf "?";
+			return "?";
 		}
 	}
 	function IsLow(signal) {
@@ -303,23 +303,24 @@ awk '
 			oeb_min[i] = ReplaceLoopback(oeb_min[i]);
 			oeb_sim[i] = ReplaceLoopback(oeb_sim[i]);
 			oeb_max[i] = ReplaceLoopback(oeb_max[i]);
-			printf "  %2d  | %6s | %6s | %6s | %5s/%5s/%5s | ", \
+			configuration = sprintf("%s%s%s%s%s%s%s%s%s%s%s",
+				GetBit(dm2_sim[i], dm2_connections[i]),
+				GetBit(dm1_sim[i], dm1_connections[i]),
+				GetBit(dm0_sim[i], dm0_connections[i]),
+				GetBit(vtrip_sim[i], vtrip_connections[i]),
+				GetBit(slow_sim[i], slow_connections[i]),
+				GetBit(analog_pol_sim[i], analog_pol_connections[i]),
+				GetBit(analog_sel_sim[i], analog_sel_connections[i]),
+				GetBit(analog_en_sim[i], analog_en_connections[i]),
+				GetBit(ib_mode_sim[i], ib_mode_connections[i]),
+				GetBit(inp_dis_sim[i], inp_dis_connections[i]),
+				GetBit(holdover_sim[i], holdover_connections[i]));
+			printf "  %2d  | %6s | %6s | %6s | %5s/%5s/%5s | %s", \
 				i, (in_connections[i] == 0) ? "" : sprintf("%6d", in_connections[i]), \
 				(out_connections[i] == 0 && ! (i in fixed)) ? "" :
 					(i in fixed) ? fixed[i] : sprintf("%6d", out_connections[i]), \
 				(analog_connections[i] == 0) ? "" : sprintf("%6d", analog_connections[i]), \
-				oeb_min[i], oeb_sim[i], oeb_max[i];
-			PrintBit(dm2_sim[i], dm2_connections[i]);
-			PrintBit(dm1_sim[i], dm1_connections[i]);
-			PrintBit(dm0_sim[i], dm0_connections[i]);
-			PrintBit(vtrip_sim[i], vtrip_connections[i]);
-			PrintBit(slow_sim[i], slow_connections[i]);
-			PrintBit(analog_pol_sim[i], analog_pol_connections[i]);
-			PrintBit(analog_sel_sim[i], analog_sel_connections[i]);
-			PrintBit(analog_en_sim[i], analog_en_connections[i]);
-			PrintBit(ib_mode_sim[i], ib_mode_connections[i]);
-			PrintBit(inp_dis_sim[i], inp_dis_connections[i]);
-			PrintBit(holdover_sim[i], holdover_connections[i]);
+				oeb_min[i], oeb_sim[i], oeb_max[i], configuration;
 			gpio_config = GPIO_TYPE[dm2[i] dm1[i] dm0[i]];
 			if ( gpio_config == "USER_STD_INPUT_PULL" ) {
 				if ( IsHigh(out_sim[i]) ) {
@@ -464,7 +465,9 @@ awk '
 				}
 			}
 			}
-			if ( ! IsLow(vtrip_sim[i]) || ! IsLow(slow_sim[i]) || ! IsLow(analog_pol_sim[i]) || ! IsLow(analog_sel_sim[i]) || \
+			if ( configuration ~ /x/ ) {
+				messages[length(messages)+1] = sprintf("GPIO %2d: ERROR: all gpio configuration signals must be connected", i);
+			} else if ( ! IsLow(vtrip_sim[i]) || ! IsLow(slow_sim[i]) || ! IsLow(analog_pol_sim[i]) || ! IsLow(analog_sel_sim[i]) || \
 					! IsLow(analog_en_sim[i]) || ! IsLow(ib_mode_sim[i]) || ! IsLow(holdover_sim[i]) ) {
 				messages[length(messages)+1] = sprintf("GPIO %2d: Warning: unrecognized configuration - expected vtrip, slow, analog*, ib, hold to be low", i);
 			}
@@ -489,7 +492,11 @@ if [[ $WORK_ROOT != $SIGNOFF_ROOT ]]; then
 	cp $WORK_ROOT/cvc.oeb.report $SIGNOFF_ROOT/cvc.oeb.report
 fi
 
-if [[ $cvc_status -eq 0 && $(grep -c '^CVC: End:' $LOG_ROOT/cvc.oeb.log) -ne 1 ]]; then
+if [[ $(wc -l < $SIGNOFF_ROOT/cvc.oeb.report) -lt 10 ]]; then
+	# CVC finished abnormally
+	exit 5
+
+elif [[ $cvc_status -eq 0 && $(grep -c '^CVC: End:' $LOG_ROOT/cvc.oeb.log) -ne 1 ]]; then
 	# CVC finished abnormally
 	exit 5
 
