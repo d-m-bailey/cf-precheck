@@ -58,10 +58,10 @@ jobs:
           ${{ runner.os }}-buildx-
 
     - name: Build Docker image
+      #  --cache-from=type=local,src=/tmp/.buildx-cache
       run: |
         docker buildx create --use
         docker buildx build \
-          --cache-from=type=local,src=/tmp/.buildx-cache \
           --cache-to=type=local,dest=/tmp/.buildx-cache-new,mode=max \
           --output type=docker \
           --tag mpw_precheck:latest \
