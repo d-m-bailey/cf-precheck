@@ -28,9 +28,16 @@ RUN dnf -y install cairo-devel csh gperf libcurl-devel expat-devel zlib-devel &&
     dnf -y --enablerepo=crb install epel-release nasm && \
     dnf clean all
 
+RUN test -f /usr/include/expat.h && echo "expat header OK"
+RUN test -f /usr/include/curl/curl.h && echo "curl header OK"
+RUN ldconfig -p | grep expat
+RUN ldconfig -p | grep curl
+
 # Install cf-precheck from PyPI (includes all Python dependencies)
+ENV CFLAGS="-I/usr/include"
+ENV CXXFLAGS="-I/usr/include"
+ENV LDFLAGS="-L/usr/lib64"
 RUN pip3 install --no-cache-dir --upgrade pip && \
-    pip3 install --no-cache-dir "klayout==0.30.7" && \
     pip3 install --no-cache-dir cf-precheck
 
 # Installation for Iverilog
